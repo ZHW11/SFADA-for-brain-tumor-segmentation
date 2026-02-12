@@ -59,12 +59,12 @@ class MambaEncoder(nn.Module):
         self.stages = nn.ModuleList()
         self.gscs = nn.ModuleList()
         for i in range(4):
-            gsc = DPMKC(dims[i])
+            dpmkc = DPMKC(dims[i])
             stage = nn.Sequential(
                 *[MambaLayer(dim=dims[i]) for j in range(depths[i])]
             )
             self.stages.append(stage)
-            self.gscs.append(gsc)
+            self.gscs.append(dpmkc)
 
         self.out_indices = out_indices
         self.mlps = nn.ModuleList()
