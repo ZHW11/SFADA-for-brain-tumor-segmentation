@@ -16,7 +16,7 @@ from monai.networks.blocks.dynunet_block import UnetOutBlock
 from monai.networks.blocks.unetr_block import UnetrBasicBlock, UnetrUpBlock
 from monai.utils import look_up_option
 
-from .modules.InnovativeMDCR import DMSC_3
+from .modules.Innovative import DPMKC
 from .modules.StructureSSM_mySP import StructureAwareSSM
 from monai.networks.nets.swin_unetr import PatchMergingV2
 from monai.networks.blocks import MLPBlock, PatchEmbed
@@ -59,7 +59,7 @@ class MambaEncoder(nn.Module):
         self.stages = nn.ModuleList()
         self.gscs = nn.ModuleList()
         for i in range(4):
-            gsc = DMSC_3(dims[i])
+            gsc = DPMKC(dims[i])
             stage = nn.Sequential(
                 *[MambaLayer(dim=dims[i]) for j in range(depths[i])]
             )
