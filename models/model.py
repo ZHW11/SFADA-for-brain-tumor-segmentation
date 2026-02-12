@@ -57,14 +57,14 @@ class MambaEncoder(nn.Module):
             self.downsample_layers.append(downsample_layer)
 
         self.stages = nn.ModuleList()
-        self.gscs = nn.ModuleList()
+        self.dpmkcs = nn.ModuleList()
         for i in range(4):
             dpmkc = DPMKC(dims[i])
             stage = nn.Sequential(
                 *[MambaLayer(dim=dims[i]) for j in range(depths[i])]
             )
             self.stages.append(stage)
-            self.gscs.append(dpmkc)
+            self.dpmkcs.append(dpmkc)
 
         self.out_indices = out_indices
         self.mlps = nn.ModuleList()
@@ -80,7 +80,7 @@ class MambaEncoder(nn.Module):
             x = self.downsample_layers[i](x)
             if i == 0:
                 x = x.permute(0, 2, 3, 1).contiguous()
-            x = self.gscs[i](x)
+            x = self.dpmkcs[i](x)
             x = self.stages[i](x)
             if i in self.out_indices:
                 norm_layer = getattr(self, f'norm{i}')
