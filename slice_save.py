@@ -24,22 +24,7 @@ from skimage.util import img_as_float
 
 def select_topk_by_kmeans(scores, n_clusters=2, min_k=15):
     """
-    用 K-means 把区域平均熵分成 2 类，返回“高不确定度”那一类对应的索引。
-    如果高不确定类为空，则回退到取前 10 % 的策略。
-
-    Parameters
-    ----------
-    scores : 1-D np.ndarray
-        每个区域的平均熵值。
-    n_clusters : int, default=2
-        KMeans 的聚类簇数，通常 2 即可区分高低。
-
-    Returns
-    -------
-    k : int
-        选出的 top-k 区域个数（高不确定簇的大小）。
-    sorted_scores : np.ndarray
-        降序排列后的 scores（与原 detect_k 接口保持一致）。
+    
     """
     scores = np.asarray(scores)
     sorted_scores = np.sort(scores)[::-1]  # 降序
@@ -60,16 +45,13 @@ def select_topk_by_kmeans(scores, n_clusters=2, min_k=15):
 
 def compute_region_uncertainty_map(entropy_map_np, num_segments=500):
     """
-    输入:
-        entropy_map_np: 单张熵图 (H, W)，类型为 numpy 数组
-    输出:
-        uncertainty_score: 最终的不确定性指标
+
     """
-    # 归一化熵图到 [0,1] 以适配 SLIC
+
     if entropy_map_np.ndim == 3:
         entropy_map_np = entropy_map_np.squeeze(0)  # 变成 (H, W)
     entropy_map_np = img_as_float(entropy_map_np)
-    # 使用 SLIC 超像素分割
+
     segments = slic(entropy_map_np, n_segments=num_segments, compactness=0.05, start_label=0, channel_axis=None)
     region_scores = []
     for seg_val in np.unique(segments):
@@ -94,10 +76,10 @@ net = net.to(config.DEVICE)
 net.eval()
 file_path = config.DATASET.ROOT
 npy_files = [f for f in os.listdir(file_path) if f.endswith(".npy")]
-# 提取不带扩展名的文件名
+
 file_names = [os.path.splitext(f)[0] for f in npy_files]
 file_names.sort()
-# output_path = "./data/BraTS2023_SSA/processed/slice_TaP"
+# output_path = "./data/BraTS2023_SSA/processed/slice"
 output_path = os.path.join(str(config.DATASET.ROOT), str(config.DATASET.SLICE_DATA_PATH))
 os.makedirs(output_path, exist_ok=True)
 for case in tqdm(file_names):
@@ -124,7 +106,7 @@ for case in tqdm(file_names):
         entropy = softmax_entropy(output_prob, softmax=False)
         entropy_np = entropy.cpu().detach().numpy()
         uncertainty = compute_region_uncertainty_map(entropy_np)
-        # 保存为 HDF5 文件
+        
         h5_file_path = os.path.join(output_path, f'{img_name}.h5')
         with h5py.File(h5_file_path, 'w') as f:
             f.create_dataset('slice', data=slice.cpu().numpy()) # Shape: (1, 4, H, W)
